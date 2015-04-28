@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>requirejs - demo</title>
+    <script src="http://apps.bdimg.com/libs/require.js/2.1.11/require.min.js"></script>
+</head>
+<body>
+    <div></div>
+    <script>
+define('start', function(require) {
+    require('../../base/class');
+});
+require(['start']);
+    </script>
+</body>
+</html>
