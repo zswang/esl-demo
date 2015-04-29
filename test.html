@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <div></div>
+</body>
+<script>
+(function() {
+    var div = document.querySelector('div');
+    log = function(msg) {
+        var p = document.createElement('p');
+        p.textContent = msg;
+        div.appendChild(p);
+    };
+})();
+
+/**
+ * 相对id转换成绝对id
+ *
+ * @inner
+ * @param {string} id 要转换的相对id
+ * @param {string} baseId 当前所在环境id
+ * @return {string} 绝对id
+ */
+function relative2absoluteNew(id, baseId) {
+    if (id.indexOf('.') !== 0) {
+        return id;
+    }
+
+    var basePath = baseId.split('/').slice(0, -1); // remove last
+    var parts = basePath.concat(id.split('/'));
+
+    // @see https://github.com/joyent/node/blob/master/lib/path.js#normalizeArray
+    var res = [];
+    for (var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+
+        // ignore empty parts
+        if (!p || p === '.') {
+            continue;
+        }
+
+        if (p === '..') {
+            if (res.length && res[res.length - 1] !== '..') {
+                res.pop();
+            } else { // allowAboveRoot
+                res.push('..');
+            }
+        } else {
+            res.push(p);
+        }
+    }
+    return res.join('/');
+}
+
+function relative2absoluteOld(id, baseId) {
+    if (id.indexOf('.') === 0) {
+        var basePath = baseId.split('/');
+        var namePath = id.split('/');
+        var baseLen = basePath.length - 1;
+        var nameLen = namePath.length;
+        var cutBaseTerms = 0;
+        var cutNameTerms = 0;
+        pathLoop: for (var i = 0; i < nameLen; i++) {
+            switch (namePath[i]) {
+                case '..':
+                    if (cutBaseTerms < baseLen) {
+                        cutBaseTerms++;
+                        cutNameTerms++;
+                    }
+                    else {
+                        break pathLoop;
+                    }
+                    break;
+                case '.':
+                    cutNameTerms++;
+                    break;
+                default:
+                    break pathLoop;
+            }
+        }
+        basePath.length = baseLen - cutBaseTerms;
+        namePath = namePath.slice(cutNameTerms);
+
+        return basePath.concat(namePath).join('/');
+    }
+
+    return id;
+}
+
+[
+    ['../../base/class', '../../lib/log'],
+    ['../../lib/jquery', '../src/main']
+].forEach(function(item) {
+    log('===========id: "' + item[0] + '" baseId: "' + item[1] + '"===========');
+    log('old: "' + relative2absoluteOld(item[0], item[1]) + '"');
+    log('new: "' + relative2absoluteNew(item[0], item[1]) + '"');
+});
+</script>
+</html>
